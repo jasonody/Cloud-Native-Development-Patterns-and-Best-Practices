@@ -11,6 +11,13 @@ provider:
         Fn::GetAtt:
           - Stream
           - Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource:
+        Fn::GetAtt:
+          - Table
+          - Arn
 
 functions:
   producer:
@@ -29,6 +36,22 @@ functions:
               - Arn
           batchSize: 100
           startingPosition: TRIM_HORIZON
+    memorySize: 128
+  consumeLatestToDynamoDB:
+    handler: handler.consumeLatestToDynamoDB
+    events:
+      - stream:
+          type: kinesis
+          arn:
+            Fn::GetAtt:
+              - Stream
+              - Arn
+          batchSize: 100
+          startingPosition: LATEST
+    memorySize: 128
+    environment:
+      TABLE_NAME:
+        Ref: Table
 
 package:
   exclude:
@@ -45,6 +68,21 @@ resources:
         Name: ${opt:stage}-${self:service}-stream
         RetentionPeriodHours: 24
         ShardCount: 1
+    Table:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${opt:stage}-${self:service}-event-streaming
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
   Outputs:
     streamName:
       Value: 

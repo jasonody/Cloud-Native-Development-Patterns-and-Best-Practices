@@ -51,3 +51,28 @@ const recordToEvent = r =>
   JSON.parse(new Buffer(r.kinesis.data, 'base64'));
 const forItemSubmitted = e => e.type === 'item-submitted';
 const print = e => console.log('event: %j', e);
+
+module.exports.consumeLatestToDynamoDB = (event, context, cb) => {
+  console.log('To DynamoDB: event: %j', event);
+
+  _(event.Records)
+    .map(recordToEvent)
+    .filter(forItemSubmitted)
+    .flatMap(putToDynamoDB)
+    .collect().toCallback(cb);
+}
+
+const putToDynamoDB = (record) => {
+  console.log('record: %j', record);
+
+  const params = {
+    TableName: process.env.TABLE_NAME,
+    Item: record.item,
+  };
+
+  console.log('params: %j', params);
+
+  const db = new aws.DynamoDB.DocumentClient();
+
+  return _(db.put(params).promise());
+}
