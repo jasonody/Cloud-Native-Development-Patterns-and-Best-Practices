@@ -25,6 +25,7 @@ provider:
 functions:
   command:
     handler: handler.command
+    memorySize: 128
     environment:
       TABLE_NAME:
         Ref: Table

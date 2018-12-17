@@ -7,9 +7,11 @@ const uuid = require('uuid');
 module.exports.command = (event, context, callback) => {
   const item = {
     id: uuid.v4(),
-    name: 'Cloud Native Development Patterns and Best Practices',
-    description: 'Practical architectural patterns for building modern distributed cloud native systems',
+    name: event.name || 'Cloud Native Development Patterns and Best Practices',
+    description: event.description || 'Practical architectural patterns for building modern distributed cloud native systems',
   };
+
+  console.log('event: %j', event);
 
   const params = {
     TableName: process.env.TABLE_NAME,
