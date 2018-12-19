@@ -56,7 +56,7 @@ const toEvent = record => ({
 
 const toRecord = event => (      {
   PartitionKey: event.partitionKey,
-  Data: new Buffer(JSON.stringify(event)),
+  Data: new Buffer(JSON.stringify(event))
 })
 
 const publish = records => {
@@ -68,7 +68,12 @@ const publish = records => {
   print(params);
 
   const kinesis = new aws.Kinesis();
-  return _(kinesis.putRecords(params).promise());
+  const promise = 
+    kinesis.putRecords(params)
+      .promise()
+      .then(data => print(data, 'Response Data'));
+        
+  return _(promise);
 }
 
-const print = value => console.log('value: %j', value);
+const print = (value, label) => console.log(`${label || 'Value'}: %j`, value);
