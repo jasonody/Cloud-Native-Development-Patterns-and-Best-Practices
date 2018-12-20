@@ -2,6 +2,8 @@ service: cndp-data-lake
 
 provider:
   name: aws
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
   runtime: nodejs6.10
   iamRoleStatements:
     - Effect: "Allow"
@@ -29,7 +31,7 @@ resources:
     Bucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${opt:stage}-${opt:region}-${self:service}-datalake
+        BucketName: ${self:provider.stage}-${self:provider.region}-${self:service}-datalake
     DeliveryStream:
       Type: AWS::KinesisFirehose::DeliveryStream
       Properties:
@@ -48,7 +50,7 @@ resources:
             Fn::GetAtt:
               - Bucket
               - Arn
-          Prefix: ${opt:stage}-${self:service}-stream/
+          Prefix: ${self:provider.stage}-${self:service}-stream/
           BufferingHints:
             IntervalInSeconds: 60
             SizeInMBs: 50
@@ -129,6 +131,6 @@ resources:
     Stream:
       Type: AWS::Kinesis::Stream
       Properties:
-        Name: ${opt:stage}-${self:service}-stream
+        Name: ${self:provider.stage}-${self:service}-stream
         RetentionPeriodHours: 24
         ShardCount: 1
