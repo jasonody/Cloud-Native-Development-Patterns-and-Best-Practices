@@ -63,7 +63,7 @@ module.exports.publish = (evt, context, callback) => {
 };
 
 module.exports.consume = (event, context, cb) => {
-  console.log('event: %j', event);
+  console.log('consume event: %j', event);
 
   _(event.Records)
     .map(recordToUow)
@@ -109,7 +109,7 @@ const save = uow => {
     Item: uow.event.item,
   };
 
-  console.log('params: %j', params);
+  console.log('save params: %j', params);
 
   const db = new aws.DynamoDB.DocumentClient({ 
     httpOptions: { timeout: 1000 } 
@@ -117,6 +117,7 @@ const save = uow => {
 
   return _(db.put(params).promise()
     .catch(err => {
+      //badRecordEvent caught here
       err.uow = uow;
       throw err;
     }));
@@ -151,7 +152,7 @@ const publish = event => {
     Data: new Buffer(JSON.stringify(event)),
   };
 
-  console.log('params: %j', params);
+  console.log('publish params: %j', params);
 
   const kinesis = new aws.Kinesis({ 
     httpOptions: { timeout: 1000 } 

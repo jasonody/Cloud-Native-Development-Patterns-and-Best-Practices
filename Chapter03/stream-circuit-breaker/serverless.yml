@@ -42,7 +42,17 @@ functions:
         Ref: Stream
       TABLE_NAME:
         Ref: Table
-
+  faultConsumer:
+    handler: fault-handler.consume
+    events:
+      - stream:
+          type: kinesis
+          arn:
+            Fn::GetAtt:
+              - Stream
+              - Arn
+          batchSize: 2 #only two events will be in event.Records collection sent to the consume function
+          startingPosition: TRIM_HORIZON
 
 
 package:
