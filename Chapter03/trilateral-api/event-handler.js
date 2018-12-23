@@ -6,7 +6,9 @@ const _ = require('highland')
 
 const eventMappings = {
   INSERT: 'item-created',
-  REMOVE: 'item-deleted'
+  MODIFY: 'item-updated',
+  FLAGGED_DELETED: 'item-deleted',
+  REMOVE: 'item-removed',
 }
 
 module.exports.publish = (event, context, callback) => {
@@ -21,7 +23,7 @@ module.exports.publish = (event, context, callback) => {
 const publishEvent = (record) => {
   const event = {
     id: uuid.v1(),
-    type: getEventType(record.eventName),
+    type: getEventType(record),
     timestamp: Date.now(),
     tags: {
       userId: "User123"
@@ -43,13 +45,21 @@ const publishEvent = (record) => {
   return _(kinesis.putRecord(params).promise())
 }
 
-const getEventType = (eventName) => {
-  const mappedEvent = eventMappings[eventName]
+const getEventType = (record) => {
+  if (isFlaggedAsDeleted(record)) return mappedEvent['FLAGGED_DELETED']
+
+  const mappedEvent = eventMappings[record.eventName]
   
   return mappedEvent || 'item-unknown'
 }
 
+const isFlaggedAsDeleted = (record) => record.eventName === 'MODIFY' &&
+  record.dynamodb.NewImage.deleted.BOOL && !record.dynamodb.OldImage.deleted.BOOL
+
 module.exports.consume = (event, context, callback) => {
   console.log('event: %j', event);
+
+  //TODO: react to category-deleted event and flag all items in that category as deleted
+
   callback();
 };

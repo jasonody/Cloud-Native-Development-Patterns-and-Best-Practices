@@ -7,7 +7,7 @@ const _ = require('highland')
 module.exports.get = (event, context, callback) => {
   console.log('event: %j', event);
 
-  
+  //TODO:Get an item by its key
 
   const response = {
     statusCode: 200,
