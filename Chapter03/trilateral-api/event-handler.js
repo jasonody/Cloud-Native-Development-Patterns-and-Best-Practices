@@ -4,22 +4,10 @@ const aws = require('aws-sdk')
 const uuid = require('uuid')
 const _ = require('highland')
 
-module.exports.query = (event, context, callback) => {
-  console.log('event: %j', event);
-
-  const response = {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
-    body: JSON.stringify({
-      message: 'Cloud Native Development Patterns and Best Practices! Your function executed successfully!',
-      input: event,
-    }),
-  };
-
-  callback(null, response);
-};
+const eventMappings = {
+  INSERT: 'item-created',
+  REMOVE: 'item-deleted'
+}
 
 module.exports.publish = (event, context, callback) => {
   console.log('event: %j', event);
@@ -33,7 +21,7 @@ module.exports.publish = (event, context, callback) => {
 const publishEvent = (record) => {
   const event = {
     id: uuid.v1(),
-    type: 'item-created',
+    type: getEventType(record.eventName),
     timestamp: Date.now(),
     tags: {
       userId: "User123"
@@ -46,12 +34,19 @@ const publishEvent = (record) => {
     PartitionKey: record.dynamodb.Keys.id.S,
     Data: new Buffer(JSON.stringify(event)),
   }
-
+  
+  console.log('publish event: %j', event)
   console.log('publish event params: %j', params)
 
   const kinesis = new aws.Kinesis();
 
   return _(kinesis.putRecord(params).promise())
+}
+
+const getEventType = (eventName) => {
+  const mappedEvent = eventMappings[eventName]
+  
+  return mappedEvent || 'item-unknown'
 }
 
 module.exports.consume = (event, context, callback) => {

@@ -44,7 +44,7 @@ functions:
       TABLE_NAME:
         Ref: Table
   query:
-    handler: handler.query
+    handler: query-handler.get
     events:
       - http:
           path: things/{id}
@@ -53,7 +53,7 @@ functions:
       TABLE_NAME:
         Ref: Table
   publish:
-    handler: handler.publish
+    handler: event-handler.publish
     events:
       - stream:
           type: dynamodb
@@ -67,7 +67,7 @@ functions:
       STREAM_NAME:
         Ref: Stream
   subscribe:
-    handler: handler.consume
+    handler: event-handler.consume
     events:
       - stream:
           type: kinesis
