@@ -28,7 +28,7 @@ module.exports.create = (event, context, callback) => {
 
   db.put(params).promise()
     .then(res => callback(null, buildResponse({id: item.id}, 200)))
-    .catch(err => callback(buildResponse(err, 500)))
+    .catch(err => callback(null, buildResponse(err, 500)))
 }
 
 const buildResponse = (body, statusCode) => ({ 

@@ -21,6 +21,7 @@ module.exports.publish = (event, context, callback) => {
 };
 
 const publishEvent = (record) => {
+  //We could translate the DynamoDB CDC model to our own model before publishing
   const event = {
     id: uuid.v1(),
     type: getEventType(record),

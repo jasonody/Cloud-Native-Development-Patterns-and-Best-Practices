@@ -7,18 +7,36 @@ const _ = require('highland')
 module.exports.get = (event, context, callback) => {
   console.log('event: %j', event);
 
-  //TODO:Get an item by its key
-
-  const response = {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
+  const params = {
+    Key: {
+      'id': {
+        'S': event.pathParameters.id
+      }
     },
-    body: JSON.stringify({
-      message: 'Cloud Native Development Patterns and Best Practices! Your function executed successfully!',
-      input: event,
-    }),
-  };
+    TableName: process.env.TABLE_NAME
+  }
 
-  callback(null, response);
+  console.log('params: %j', params)
+
+  const db = new aws.DynamoDB()
+  db.getItem(params).promise()
+    .then(res => callback(null, buildResponse(res, isEmptyObject(res) ? 404 : 200)))
+    .catch(err => callback(null, buildResponse(err, err.statusCode || 500)))
 };
+
+const isEmptyObject = (obj) => {
+  for(let key in obj) {
+    if(obj.hasOwnProperty(key))
+        return false;
+  }
+  return true;
+}
+
+// We should translate the dynamoDb model to out own model before returning
+const buildResponse = (body, statusCode) => ({ 
+  statusCode,
+  headers: {
+    'Access-Control-Allow-Origin': '*',
+  },
+  body: JSON.stringify(body),
+})
