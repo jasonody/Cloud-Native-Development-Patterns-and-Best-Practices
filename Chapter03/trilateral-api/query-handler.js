@@ -8,18 +8,14 @@ module.exports.get = (event, context, callback) => {
   console.log('event: %j', event);
 
   const params = {
-    Key: {
-      'id': {
-        'S': event.pathParameters.id
-      }
-    },
+    Key: { 'id': event.pathParameters.id },
     TableName: process.env.TABLE_NAME
   }
 
   console.log('params: %j', params)
 
-  const db = new aws.DynamoDB()
-  db.getItem(params).promise()
+  const db = new aws.DynamoDB.DocumentClient()
+  db.get(params).promise()
     .then(res => callback(null, buildResponse(res, isEmptyObject(res) ? 404 : 200)))
     .catch(err => callback(null, buildResponse(err, err.statusCode || 500)))
 };
