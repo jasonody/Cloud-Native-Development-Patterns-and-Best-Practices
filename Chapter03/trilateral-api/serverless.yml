@@ -2,6 +2,8 @@ service: cndp-trilateral-api
 
 provider:
   name: aws
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
   runtime: nodejs6.10
   iamRoleStatements:
     - Effect: Allow
@@ -20,12 +22,21 @@ provider:
           - Arn
 
 functions:
-  command:
-    handler: handler.command
+  command-create:
+    handler: command-handler.create
     events:
       - http:
           path: things
           method: post
+      - http:
+          path: things
+          method: put
+    environment:
+      TABLE_NAME:
+        Ref: Table
+  command-update:
+    handler: command-handler.update
+    events:
       - http:
           path: things/{id}
           method: put
@@ -84,13 +95,13 @@ resources:
     Stream:
       Type: AWS::Kinesis::Stream
       Properties:
-        Name: ${opt:stage}-${self:service}-stream
+        Name: ${self:provider.stage}-${self:service}-stream
         RetentionPeriodHours: 24
         ShardCount: 1
     Table:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${opt:stage}-${self:service}-t1
+        TableName: ${self:provider.stage}-${self:service}-t1
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
