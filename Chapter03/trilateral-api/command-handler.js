@@ -12,8 +12,7 @@ module.exports.create = (event, context, callback) => {
     id: uuid.v4(),
     name: body.name || 'Cloud Native Development Patterns and Best Practices',
     description: body.description || 'Practical architectural patterns for building modern distributed cloud native systems',
-    category: body.category && { id: body.category.toLowerCase(), name: body.category} || 
-      { id: 'widgets', name: 'Widgets' },
+    category: body.category && body.category.toLowerCase() || 'widgets',
     deleted: false,
   }
   

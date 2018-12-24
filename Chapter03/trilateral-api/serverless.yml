@@ -10,6 +10,7 @@ provider:
       Action:
         - dynamodb:PutItem
         - dynamodb:GetItem
+        - dynamodb:UpdateItem
       Resource:
         Fn::GetAtt:
           - Table
@@ -83,6 +84,11 @@ functions:
         Ref: Stream
       TABLE_NAME:
         Ref: Table
+  produce-category-deleted:
+    handler: handler.deleteCategory
+    environment:
+      STREAM_NAME:
+        Ref: Stream
 
 package:
   exclude:

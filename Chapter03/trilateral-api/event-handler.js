@@ -47,7 +47,7 @@ const publishEvent = (record) => {
 }
 
 const getEventType = (record) => {
-  if (isFlaggedAsDeleted(record)) return mappedEvent['FLAGGED_DELETED']
+  if (isFlaggedAsDeleted(record)) return eventMappings['FLAGGED_DELETED']
 
   const mappedEvent = eventMappings[record.eventName]
   
@@ -61,6 +61,39 @@ module.exports.consume = (event, context, callback) => {
   console.log('event: %j', event);
 
   //TODO: react to category-deleted event and flag all items in that category as deleted
-
-  callback();
+  _(event.Records)
+    .map(recordToEvent)
+    .tap(e => console.log('mapped category deleted event: %j', e))
+    .filter(forCategoryDeleted)
+    .flatMap(flagAsDeleted)
+    .collect()
+    .toCallback(callback)
 };
+
+const recordToEvent = record => JSON.parse(new Buffer(record.kinesis.data, 'base64'))
+
+const forCategoryDeleted = event => event.type === 'category-deleted'
+
+const flagAsDeleted = (event) => {
+  const params = {
+    TableName: process.env.TABLE_NAME,
+    IndexName: 'category.id-index',
+    //Key: {'id': event.category.id},
+    Key: {
+      //'category': { 'id': event.category.id }
+      'id': 'bda8f685-af12-4829-b90a-40dc0edc97ad'
+    },
+    //KeyConditionExpression: 'id = :id', 
+    UpdateExpression: 'set deleted = :d',
+    ExpressionAttributeValues: {
+      ':d': true,
+      //':id': event.category.id
+    }
+  }
+
+  console.log('flag as deleted params: %j', params)
+
+  const db = new aws.DynamoDB.DocumentClient()
+
+  return _(db.update(params).promise())
+}
