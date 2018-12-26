@@ -35,7 +35,7 @@ const publishEvent = (record) => {
   const params = {
     StreamName: process.env.STREAM_NAME,
     PartitionKey: record.dynamodb.Keys.id.S,
-    Data: new Buffer(JSON.stringify(event)),
+    Data: Buffer.from(JSON.stringify(event)),
   }
   
   console.log('publish event: %j', event)
@@ -62,18 +62,17 @@ module.exports.consume = (event, context, callback) => {
 
   _(event.Records)
     .map(recordToEvent)
-    .tap(e => console.log('mapped category deleted event: %j', e))
+    .tap(e => console.log('consume event: %j', e))
     .filter(forCategoryDeleted)
     .flatMap(getItemIdsForCategory)
     .flatMap(i => i.Items)
     .flatMap(flagAsDeleted)
-    .flatMap(flagAsDeleted)
-    .errors(handleErrors)
+    //.errors(handleErrors)
     .collect()
     .toCallback(callback)
 };
 
-const recordToEvent = record => JSON.parse(new Buffer(record.kinesis.data, 'base64'))
+const recordToEvent = record => JSON.parse(Buffer.from(record.kinesis.data, 'base64'))
 
 const forCategoryDeleted = event => event.type === 'category-deleted'
 
@@ -116,5 +115,7 @@ const flagAsDeleted = item => {
 
 const handleErrors = (err, push) => {
   console.log('ERROR: %j', err)
-  push(null, err)
+  
+  push(null, err) //handle error
+  //push(err) //re-throw error
 }

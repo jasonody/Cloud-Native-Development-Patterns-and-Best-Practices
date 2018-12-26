@@ -21,7 +21,7 @@ module.exports.deleteCategory = (evt, context, callback) => {
   const params = {
     StreamName: process.env.STREAM_NAME,
     PartitionKey: event.category, //Probably shouldn't be a string
-    Data: new Buffer(JSON.stringify(event))
+    Data: Buffer.from(JSON.stringify(event))
   }
 
   const kinesis = new aws.Kinesis()
