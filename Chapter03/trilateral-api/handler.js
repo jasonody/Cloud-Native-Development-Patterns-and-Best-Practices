@@ -5,10 +5,6 @@ const uuid = require('uuid')
 
 module.exports.deleteCategory = (evt, context, callback) => {
   console.log('delete category input event: %j', evt)
-  
-  const category = {
-    id: evt.category || 'widgets'
-  }
 
   const event = {
     id: uuid.v1(),
@@ -17,14 +13,14 @@ module.exports.deleteCategory = (evt, context, callback) => {
     tags: {
       userId: uuid.v4(),
     },
-    category
+    category: evt.category || 'widgets'
   }
   
   console.log('delete category event: %j', event)
 
   const params = {
     StreamName: process.env.STREAM_NAME,
-    PartitionKey: category.id, //Probably shouldn't be a string
+    PartitionKey: event.category, //Probably shouldn't be a string
     Data: new Buffer(JSON.stringify(event))
   }
 

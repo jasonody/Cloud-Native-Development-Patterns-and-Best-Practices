@@ -7,45 +7,27 @@ aws.config.update({
   region: 'us-east-1'
 })
 
-// const params = {
-//   TableName: 'dev-cndp-trilateral-api-t1',
-//   IndexName: 'category-index',
-//   Key: {
-//     id: '2f42d588-49fc-443b-880e-6f1646f80b5f'
-//   },
-//   UpdateExpression: 'set deleted = :d',
-//   ExpressionAttributeValues: {
-//     ':d': true
-//   }
-// }
+const deletedCategories = ['widgets', 'jars']
 
-var params = {
-  TableName: "dev-cndp-trilateral-api-t1",
-  ProjectionExpression: "id",
-  FilterExpression: "category = :c",
-  ExpressionAttributeValues: {
-       ":c": "widgets"
-  }
-};
-
-console.log('flag as deleted params: %j', params)
-
-const db = new aws.DynamoDB.DocumentClient()
-
-db.scan(params).promise()
-  .then(res => handleScan(res))
-  .catch(err => console.log('Error: %j', err))
-
-const handleScan = (data) => {
-  console.log('scan results: %j', data)
-
-  _(data.Items)
-    .flatMap(flagAsDeleted)
-    .collect()
-    .done()
+const getItemIdsForCategory = (category) => {
+  var params = {
+    TableName: "dev-cndp-trilateral-api-t1",
+    ProjectionExpression: "id",
+    FilterExpression: "category = :c",
+    ExpressionAttributeValues: {
+         ":c": category
+    }
+  };
+  
+  console.log('getItemIdsForCategory params: %j', params)
+  
+  const db = new aws.DynamoDB.DocumentClient()
+  
+  return _(db.scan(params).promise())
 }
 
 const flagAsDeleted = item => {
+  console.log('flag as deleted item: %j', item)
   const params = {
     TableName: 'dev-cndp-trilateral-api-t1',
     Key: {
@@ -59,5 +41,16 @@ const flagAsDeleted = item => {
 
   console.log('Update params: %j', params)
 
+  const db = new aws.DynamoDB.DocumentClient()
+
   return _(db.update(params).promise())
 }
+
+const callback = (err, data) => err ? console.log('Error: %j', err) : console.log('Data: %j', data)
+
+_(deletedCategories)
+  .flatMap(getItemIdsForCategory)
+  .flatMap(i => i.Items)
+  .flatMap(flagAsDeleted)
+  .collect()
+  .toCallback(callback)

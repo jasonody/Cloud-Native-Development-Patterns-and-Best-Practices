@@ -60,12 +60,15 @@ const isFlaggedAsDeleted = (record) => record.eventName === 'MODIFY' &&
 module.exports.consume = (event, context, callback) => {
   console.log('event: %j', event);
 
-  //TODO: react to category-deleted event and flag all items in that category as deleted
   _(event.Records)
     .map(recordToEvent)
     .tap(e => console.log('mapped category deleted event: %j', e))
     .filter(forCategoryDeleted)
+    .flatMap(getItemIdsForCategory)
+    .flatMap(i => i.Items)
     .flatMap(flagAsDeleted)
+    .flatMap(flagAsDeleted)
+    .errors(handleErrors)
     .collect()
     .toCallback(callback)
 };
@@ -74,26 +77,44 @@ const recordToEvent = record => JSON.parse(new Buffer(record.kinesis.data, 'base
 
 const forCategoryDeleted = event => event.type === 'category-deleted'
 
-const flagAsDeleted = (event) => {
+const getItemIdsForCategory = (event) => {
+  var params = {
+    TableName: "dev-cndp-trilateral-api-t1",
+    ProjectionExpression: "id",
+    FilterExpression: "category = :c",
+    ExpressionAttributeValues: {
+         ":c": event.category
+    }
+  };
+  
+  console.log('getItemIdsForCategory params: %j', params)
+  
+  const db = new aws.DynamoDB.DocumentClient()
+  
+  return _(db.scan(params).promise())
+}
+
+const flagAsDeleted = item => {
+  console.log('flag as deleted item: %j', item)
   const params = {
-    TableName: process.env.TABLE_NAME,
-    IndexName: 'category.id-index',
-    //Key: {'id': event.category.id},
+    TableName: 'dev-cndp-trilateral-api-t1',
     Key: {
-      //'category': { 'id': event.category.id }
-      'id': 'bda8f685-af12-4829-b90a-40dc0edc97ad'
+      id: item.id
     },
-    //KeyConditionExpression: 'id = :id', 
     UpdateExpression: 'set deleted = :d',
     ExpressionAttributeValues: {
-      ':d': true,
-      //':id': event.category.id
+      ':d': true
     }
   }
 
-  console.log('flag as deleted params: %j', params)
+  console.log('Update params: %j', params)
 
   const db = new aws.DynamoDB.DocumentClient()
 
   return _(db.update(params).promise())
+}
+
+const handleErrors = (err, push) => {
+  console.log('ERROR: %j', err)
+  push(null, err)
 }

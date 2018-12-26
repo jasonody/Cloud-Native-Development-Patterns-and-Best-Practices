@@ -11,6 +11,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:GetItem
         - dynamodb:UpdateItem
+        - dynamodb:Scan
       Resource:
         Fn::GetAtt:
           - Table
