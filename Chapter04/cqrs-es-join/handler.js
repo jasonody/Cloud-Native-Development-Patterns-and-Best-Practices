@@ -9,15 +9,15 @@ aws.config.update({
 });
 
 module.exports.command = (evt, context, callback) => {
-  const userId = uuid.v4();
-  const userId2 = uuid.v4();
+  const userId = '0d2e140f-08b4-4064-bfc1-91feba015f4c'//uuid.v4();
+  const userId2 = '13989ddd-770c-4051-9ba6-4b2a83325ded'//uuid.v4();
 
   const params = {
     StreamName: process.env.STREAM_NAME,
     Records: [
       {
         PartitionKey: userId,
-        Data: new Buffer(JSON.stringify({
+        Data: Buffer.from(JSON.stringify({
           id: uuid.v1(),
           type: 'user-created',
           timestamp: Date.now(),
@@ -29,7 +29,7 @@ module.exports.command = (evt, context, callback) => {
       },
       {
         PartitionKey: userId,
-        Data: new Buffer(JSON.stringify({
+        Data: Buffer.from(JSON.stringify({
           id: uuid.v1(),
           type: 'user-loggedIn',
           timestamp: Date.now(),
@@ -40,7 +40,7 @@ module.exports.command = (evt, context, callback) => {
       },
       {
         PartitionKey: userId,
-        Data: new Buffer(JSON.stringify({
+        Data: Buffer.from(JSON.stringify({
           id: uuid.v1(),
           type: 'order-submitted',
           timestamp: Date.now(),
@@ -51,7 +51,7 @@ module.exports.command = (evt, context, callback) => {
       },
       {
         PartitionKey: userId2,
-        Data: new Buffer(JSON.stringify({
+        Data: Buffer.from(JSON.stringify({
           id: uuid.v1(),
           type: 'user-loggedIn',
           timestamp: Date.now(),
@@ -64,6 +64,64 @@ module.exports.command = (evt, context, callback) => {
   };
 
   console.log('params: %j', params);
+
+  const kinesis = new aws.Kinesis();
+
+  kinesis.putRecords(params).promise()
+    .then(resp => callback(null, resp))
+    .catch(err => callback(err));
+};
+
+module.exports.commandLogin = (evt, context, callback) => {
+  const userId = '0d2e140f-08b4-4064-bfc1-91feba015f4c'
+
+  const params = {
+    StreamName: process.env.STREAM_NAME,
+    Records: [
+      {
+        PartitionKey: userId,
+        Data: Buffer.from(JSON.stringify({
+          id: uuid.v1(),
+          type: 'user-loggedIn',
+          timestamp: Date.now(),
+          user: {
+            id: userId
+          }
+        })),
+      },
+    ]
+  };
+
+  console.log('login params: %j', params);
+
+  const kinesis = new aws.Kinesis();
+
+  kinesis.putRecords(params).promise()
+    .then(resp => callback(null, resp))
+    .catch(err => callback(err));
+};
+
+module.exports.commandOrder = (evt, context, callback) => {
+  const userId = '0d2e140f-08b4-4064-bfc1-91feba015f4c'
+
+  const params = {
+    StreamName: process.env.STREAM_NAME,
+    Records: [
+      {
+        PartitionKey: userId,
+        Data: Buffer.from(JSON.stringify({
+          id: uuid.v1(),
+          type: 'order-submitted',
+          timestamp: Date.now(),
+          order: {
+            userId: userId
+          }
+        })),
+      },
+    ]
+  };
+
+  console.log('login params: %j', params);
 
   const kinesis = new aws.Kinesis();
 
