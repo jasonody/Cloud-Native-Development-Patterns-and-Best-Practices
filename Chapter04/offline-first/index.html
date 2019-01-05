@@ -2,7 +2,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react-dom.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.js"></script>
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.12.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-js@1.1.0/dist/amazon-cognito.min.js"></script>
 
@@ -16,7 +16,7 @@ class App extends React.Component {
     componentWillMount() {
         AWS.config.region = 'us-east-1';
         AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: 'us-east-1:37b46b84-b896-4973-ac7a-159d78b119ab',
+            IdentityPoolId: 'us-east-1:7e7e9910-ce21-40af-a87b-db688ff7ee67',
         });
         
         AWS.config.credentials.get(() => {
