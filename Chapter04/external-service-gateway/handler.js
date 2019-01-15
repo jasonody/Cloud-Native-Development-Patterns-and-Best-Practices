@@ -40,7 +40,7 @@ module.exports.consumer = (event, context, cb) => {
 
   _(event.Records)
     .map(recordToUow)
-    // .tap(print)
+    .tap(print)
     .filter(forUserInvited)
     .flatMap(createUser)
     // .tap(print)
